@@ -1,54 +1,83 @@
 @echo off
+echo ==============================
+echo INFO: Running run_docker.bat...
+echo ==============================
 
-timeout /t 1 /nobreak
+docker --version
 
 :: Go in specified directory
-cd /d C:\Users\uig37216\Desktop\SCOALA\RESTful\Tema_1_3ApiApelate
-
-timeout /t 1 /nobreak
+cd /d D:\FACULTATE\AN_1_MASTER\Semestrul_2\Damian\T1\
 
 :: Check if env_data.env file exists
 if not exist env_data.env (
-    echo ERROR: No env_data.env file in current dir !
+    echo ERROR: No env_data.env file in current dir!
     pause
     exit /b
 )
 
-timeout /t 1 /nobreak
-
 :: Show the list of Docker images before checking
+echo ==============================
 echo INFO: Showing Docker images...
 docker images
 
-timeout /t 1 /nobreak
-
 :: Show Dockerfile location
+echo ==============================
 echo INFO: Dockerfile path: Dockerfile
-
-timeout /t 1 /nobreak
 
 :: Check if Dockerfile exists
 if not exist Dockerfile (
-    echo ERROR: Dockerfile not found at the specified location!
+    echo ERROR: Dockerfile not found!
     pause
     exit /b
 )
 
-:: Build image if it's not built
-docker images | findstr /i "myapp"
+:: Check if image exists
+docker inspect myapp >nul 2>&1
 if %errorLevel% neq 0 (
     echo INFO: Docker image not found, building image...
-    docker build -t myapp -f Dockerfile .
+    docker build --no-cache -t myapp .
+) else (
+    echo INFO: Docker image exists!
 )
 
-:: Add a small delay before running the container to ensure image is built
-timeout /t 5 /nobreak
+:: Cleanup old containers and images
+echo ==============================
+echo INFO: Deleting old containers...
+docker container prune -f
+echo INFO: Deleting old images... 
+docker image prune -f
 
-:: Run the container with variables from env_data.env file with port 8080
-echo INFO: Run container...
-docker run --env-file env_data.env -p 8080:8080 myapp
+:: Check if WEATHER_API_KEY_1 exists in env_data.env
+findstr /R "^WEATHER_API_KEY_1=" env_data.env >nul
+if %errorLevel% neq 0 (
+    echo ERROR: WEATHER_API_KEY_1 not found in env_data.env!
+    pause
+    exit /b
+) else (
+    echo INFO: WEATHER_API_KEY_1 found!
+)
 
-timeout /t 1 /nobreak
+:: Check if WEATHER_API_KEY_2 exists in env_data.env
+findstr /R "^WEATHER_API_KEY_2=" env_data.env >nul
+if %errorLevel% neq 0 (
+    echo ERROR: WEATHER_API_KEY_2 not found in env_data.env!
+    pause
+    exit /b
+) else (
+    echo INFO: WEATHER_API_KEY_2 found!
+)
 
-pause
+:: Run the container, added -it tu run interactively
+echo ==============================
+echo INFO: Running container...
+docker run -it --env-file env_data.env -p 8080:8080 myapp
 
+:: Copy json data
+echo ==============================
+echo INFO: Copy data into machine...
+docker cp <container_id>:/app/inputs.json .
+
+echo ==============================
+echo INFO: Container exited. Press any key to close.
+@REM pause
+exit /b

@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 from datetime import datetime
+
 from settings_manager import SettingsManager
 
 @dataclass
 class DataContainer(SettingsManager):
-    """Class to store common data of the project"""
+    """ Class to store common data of the project"""
     location: str
     date: datetime
     temperature: float = 0.0
@@ -12,6 +13,9 @@ class DataContainer(SettingsManager):
     def __post_init__(self):
         super().__init__()
 
+        self.OK = 1
+        self.NOT_OK = 0
+        
         self.rc = {
             "OK": 200,
             "Resource_Moved_To_Another_Location": 301,
